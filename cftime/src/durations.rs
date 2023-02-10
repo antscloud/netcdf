@@ -1,11 +1,23 @@
 #![allow(unused)]
-use crate::calendars::Calendars;
+use crate::calendars::Calendar as Calendars;
 use crate::constants;
 use chrono;
 use std::{
     fmt,
     ops::{Add, Div, Mul, Neg, Sub},
 };
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum DurationUnit {
+    Years,
+    Months,
+    Days,
+    Hours,
+    Minutes,
+    Seconds,
+    Milliseconds,
+    Microseconds,
+}
 
 /// Base duration between time points. Higly inspired by https://docs.rs/time/0.1.37/src/time/duration.rs.html
 #[allow(missing_docs)]

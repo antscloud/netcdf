@@ -1,8 +1,11 @@
 #![allow(unused)]
-use crate::calendars::Calendars;
-use crate::datetimes::factory::{CFDateFactory, CFDateTimeFactory, CFDates, CFDatetimes};
-use crate::durations::CFDuration;
-use crate::time::Time;
+use crate::calendars::Calendar;
+//use crate::datetimes::factory::{CFDateFactory, CFDateTimeFactory, CFDates, CFDatetimes};
+use crate::datetimes::Datetime;
+use crate::datetimes::Timezone;
+use crate::durations::{CFDuration, DurationUnit};
+// use crate::time::Time;
+use crate::datetimes::Time;
 use crate::tz::Tz;
 use nom::{
     branch::alt,
@@ -26,18 +29,19 @@ impl std::fmt::Display for ParseError {
 
 impl std::error::Error for ParseError {}
 
-fn duration<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFDuration> {
+fn duration<'a>(input: &'a str) -> IResult<&'a str, DurationUnit> {
     #[rustfmt::skip]
     let years = value(
-        CFDuration::years(1, *calendar),
+        DurationUnit::Years,
         alt((
+            tag("years"),
             tag("common_years"),
             tag("common_year")
         )),
     );
     #[rustfmt::skip]
     let months = value(
-        CFDuration::months(1, *calendar),
+        DurationUnit::Months,
         alt((
             tag("months"),
             tag("month")
@@ -45,7 +49,7 @@ fn duration<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
     );
     #[rustfmt::skip]
     let days = value(
-        CFDuration::days(1, *calendar),
+        DurationUnit::Days,
         alt((
             tag("days"),
             tag("day"),
@@ -54,7 +58,7 @@ fn duration<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
     );
     #[rustfmt::skip]
     let hours = value(
-        CFDuration::hours(1,*calendar),
+        DurationUnit::Hours,
         alt((
             tag("hours"),
             tag("hour"),
@@ -65,7 +69,7 @@ fn duration<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
     );
     #[rustfmt::skip]
     let minutes = value(
-        CFDuration::minutes(1,*calendar),
+        DurationUnit::Minutes,
         alt((
             tag("minutes"),
             tag("minute"),
@@ -74,7 +78,7 @@ fn duration<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
         )),
     );
     let seconds = value(
-        CFDuration::seconds(1, *calendar),
+        DurationUnit::Seconds,
         alt((
             tag("seconds"),
             tag("second"),
@@ -84,7 +88,7 @@ fn duration<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
         )),
     );
     let milliseconds = value(
-        CFDuration::milliseconds(1, *calendar),
+        DurationUnit::Milliseconds,
         alt((
             tag("milliseconds"),
             tag("millisecond"),
@@ -96,7 +100,7 @@ fn duration<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
         )),
     );
     let microseconds = value(
-        CFDuration::microseconds(1, *calendar),
+        DurationUnit::Microseconds,
         alt((
             tag("microseconds"),
             tag("microsecond"),
@@ -120,14 +124,11 @@ fn duration<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
 /// macro created to not pass two argument to the function as it is a requirement
 /// for nom::separated_pair
 
-fn date<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFDates> {
-    let ymd = map(
-        tuple((i32, tag("-"), u32, tag("-"), u32)),
-        |(year, _, month, _, day)| CFDateFactory::build(year, month, day, *calendar).unwrap(),
-    );
-
-    let x = alt((ymd,))(input);
-    x
+fn date<'a>(input: &'a str, calendar: Option<Calendar>) -> IResult<&'a str, crate::datetimes::Date> {
+    map(
+        tuple((u32, tag("-"), u32, tag("-"), u32)),
+        |(year, _, month, _, day)| crate::datetimes::Date { year, month, day },
+    )(input)
 }
 fn time(input: &str) -> IResult<&str, Time> {
     let hms = map(
@@ -139,8 +140,8 @@ fn time(input: &str) -> IResult<&str, Time> {
             Time {
                 hour: hour as u32,
                 minute: minute as u32,
-                second: second as u32,
-                nanosecond: nanosecond as u64,
+                second: Some(second as u32),
+                nanosecond: Some(nanosecond as u64),
             }
         },
     );
@@ -148,29 +149,24 @@ fn time(input: &str) -> IResult<&str, Time> {
     let hm = map(separated_pair(i32, tag(":"), u32), |(hour, minute)| Time {
         hour: hour as u32,
         minute: minute,
-        second: 0,
-        nanosecond: 0,
+        ..Default::default()
     });
 
-    let x = alt((hms, hm))(input);
-    x
+    alt((hms, hm))(input)
 }
 
-fn timezone(input: &str) -> IResult<&str, Tz> {
+fn timezone(input: &str) -> IResult<&str, crate::datetimes::Timezone> {
     println!("{input}");
     let hm = map(
         preceded(opt(tag("+")), separated_pair(i8, tag(":"), u8)),
-        |(hour, minute)| Tz {
-            hour: hour,
-            minute: minute,
-        },
+        |(hour, minute)| crate::datetimes::Timezone { hour, minute },
     );
-    let z = value(Tz::default(), tag("Z"));
-    let utc = value(Tz::default(), tag("UTC"));
+    let z = value(Timezone::utc(), tag("Z"));
+    let utc = value(Timezone::utc(), tag("UTC"));
     alt((hm, z, utc))(input)
 }
 
-fn datetime<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFDatetimes> {
+fn datetime<'a>(input: &'a str, calendar: Option<Calendar>) -> IResult<&'a str, Datetime> {
     fn space1_or_t(input: &str) -> IResult<&str, ()> {
         alt((value((), space1), value((), tag("T"))))(input)
     }
@@ -180,27 +176,31 @@ fn datetime<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
             space1,
             timezone,
         ),
-        |((date, time), tz)| CFDateTimeFactory::build(date, time, tz).unwrap(),
+        |((date, time), tz)| Datetime {
+            date,
+            time: Some(time),
+            tz: Some(tz),
+            calendar,
+        },
     );
 
     let no_tz = map(
         separated_pair(|x| date(x, calendar), space1_or_t, time),
-        |(date, time)| {
-            let tz = Tz { hour: 0, minute: 0 };
-            CFDateTimeFactory::build(date, time, tz).unwrap()
+        |(date, time)| Datetime {
+            date,
+            time: Some(time),
+            calendar,
+            ..Default::default()
         },
     );
 
     let date_with_tz = map(
         separated_pair(|x| date(x, calendar), space1, timezone),
-        |(date, tz)| {
-            let time = Time {
-                hour: 0,
-                minute: 0,
-                second: 0,
-                nanosecond: 0,
-            };
-            CFDateTimeFactory::build(date, time, tz).unwrap()
+        |(date, tz)| Datetime {
+            date,
+            tz: Some(tz),
+            calendar,
+            ..Default::default()
         },
     );
 
@@ -210,20 +210,20 @@ fn datetime<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
             peek(one_of("+-Z")),
             timezone,
         ),
-        |((date, time), tz)| CFDateTimeFactory::build(date, time, tz).unwrap(),
+        |((date, time), tz)| Datetime {
+            date,
+            time: Some(time),
+            tz: Some(tz),
+            calendar,
+        },
     );
 
     let only_date = map(
         |x| date(x, calendar),
-        |date| {
-            let time = Time {
-                hour: 0,
-                minute: 0,
-                second: 0,
-                nanosecond: 0,
-            };
-            let tz = Tz { hour: 0, minute: 0 };
-            CFDateTimeFactory::build(date, time, tz).unwrap()
+        |date| Datetime {
+            date,
+            calendar,
+            ..Default::default()
         },
     );
 
@@ -233,26 +233,19 @@ fn datetime<'a>(input: &'a str, calendar: &'a Calendars) -> IResult<&'a str, CFD
 
 #[derive(Debug)]
 pub struct ParsedCFTime {
-    pub duration: CFDuration,
-    pub from: CFDatetimes,
+    pub duration: DurationUnit,
+    pub from: Datetime,
 }
 
 /// Parse a CF compatible string into two components
-pub fn cf_parser(input: &str, calendar: Option<Calendars>) -> Result<ParsedCFTime, ParseError> {
+pub fn cf_parser(input: &str, calendar: Option<Calendar>) -> Result<ParsedCFTime, ParseError> {
     let since = tuple((space1, tag("since"), space1));
-    let calendar = match calendar {
-        Some(calendar) => calendar,
-        None => Calendars::default(),
-    };
     let x = all_consuming(separated_pair(
-        |x| duration(x, &calendar),
+        duration,
         since,
-        |x| datetime(x, &calendar),
+        |x| datetime(x, calendar),
     ))(input)
-    .map(|(_, o)| ParsedCFTime {
-        duration: o.0,
-        from: o.1,
-    })
+    .map(|(_, (duration, from))| ParsedCFTime { duration, from })
     .map_err(|e| ParseError(format!("{}", e)));
     x
 }
