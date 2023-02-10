@@ -126,7 +126,7 @@ fn duration<'a>(input: &'a str) -> IResult<&'a str, DurationUnit> {
 
 fn date<'a>(input: &'a str, calendar: Option<Calendar>) -> IResult<&'a str, crate::datetimes::Date> {
     map(
-        tuple((u32, tag("-"), u32, tag("-"), u32)),
+        tuple((i32, tag("-"), u32, tag("-"), u32)),
         |(year, _, month, _, day)| crate::datetimes::Date { year, month, day },
     )(input)
 }

@@ -8,7 +8,7 @@ use crate::calendars::Calendar;
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Date {
-    pub year: u32,
+    pub year: i32,
     pub month: u32,
     pub day: u32,
 }
