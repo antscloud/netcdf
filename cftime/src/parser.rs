@@ -121,9 +121,6 @@ fn duration<'a>(input: &'a str) -> IResult<&'a str, DurationUnit> {
     ))(input)
 }
 
-/// macro created to not pass two argument to the function as it is a requirement
-/// for nom::separated_pair
-
 fn date<'a>(input: &'a str, calendar: Option<Calendar>) -> IResult<&'a str, crate::datetimes::Date> {
     map(
         tuple((i32, tag("-"), u32, tag("-"), u32)),

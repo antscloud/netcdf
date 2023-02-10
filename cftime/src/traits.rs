@@ -4,20 +4,21 @@ use std::{
     ops::{Add, Sub},
 };
 
+use crate::datetimes::Datetime;
 use crate::parser::ParsedCFTime;
 
 
 impl ParsedCFTime {
-    pub(crate) fn add_scaled_duration_integer(&self, delta: i64) -> Self {
+    pub(crate) fn add_scaled_duration_integer(&self, delta: i64) -> Datetime {
         todo!()
     }
-    pub(crate) fn add_scaled_duration_integers(&self, delta: &[i64]) -> Vec<Self> {
+    pub(crate) fn add_scaled_duration_integers(&self, delta: &[i64]) -> Vec<Datetime> {
         delta.iter().copied().map(|delta| self.add_scaled_duration_integer(delta)).collect()
     }
-    pub(crate) fn add_scaled_duration_float(&self, delta: f64) -> Self {
+    pub(crate) fn add_scaled_duration_float(&self, delta: f64) -> Datetime {
         todo!()
     }
-    pub(crate) fn add_scaled_duration_floats(&self, delta: &[f64]) -> Vec<Self> {
+    pub(crate) fn add_scaled_duration_floats(&self, delta: &[f64]) -> Vec<Datetime> {
         delta.iter().copied().map(|delta| self.add_scaled_duration_float(delta)).collect()
     }
 }
@@ -28,26 +29,26 @@ pub trait AddableDuration<T> {
 }
 
 impl AddableDuration<i64> for ParsedCFTime {
-    type Output = Self;
+    type Output = Datetime;
     fn add_scaled_duration(&self, delta: i64) -> Self::Output {
         self.add_scaled_duration_integer(delta)
     }
 }
 impl<'a> AddableDuration<&'a [i64]> for ParsedCFTime {
-    type Output = Vec<Self>;
+    type Output = Vec<Datetime>;
     fn add_scaled_duration(&self, delta: &'a [i64]) -> Self::Output {
         self.add_scaled_duration_integers(delta)
     }
 }
 
 impl AddableDuration<f64> for ParsedCFTime {
-    type Output = Self;
+    type Output = Datetime;
     fn add_scaled_duration(&self, delta: f64) -> Self::Output {
         self.add_scaled_duration_float(delta)
     }
 }
 impl<'a> AddableDuration<&'a [f64]> for ParsedCFTime {
-    type Output = Vec<Self>;
+    type Output = Vec<Datetime>;
     fn add_scaled_duration(&self, delta: &'a [f64]) -> Self::Output {
         self.add_scaled_duration_floats(delta)
     }
