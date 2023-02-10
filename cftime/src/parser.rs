@@ -227,8 +227,7 @@ fn datetime<'a>(input: &'a str, calendar: Option<Calendar>) -> IResult<&'a str, 
         },
     );
 
-    let x = alt((tz, date_time_no_space_tz, no_tz, date_with_tz, only_date))(input);
-    x
+    alt((tz, date_time_no_space_tz, no_tz, date_with_tz, only_date))(input)
 }
 
 #[derive(Debug)]
@@ -254,8 +253,8 @@ pub fn cf_parser(input: &str, calendar: Option<Calendar>) -> Result<ParsedCFTime
 mod test {
     use super::*;
 
-    fn parse(input: &str) {
-        println!("{:?}", cf_parser(input, None).unwrap())
+    fn parse(input: &str) -> ParsedCFTime {
+        cf_parser(input, None).unwrap()
     }
 
     #[test]
@@ -308,5 +307,28 @@ mod test {
     fn etc() {
         parse("seconds since 1992-10-8 15:15:42.5Z");
         parse("seconds since 1992-10-8 15:15:42Z");
+    }
+
+    #[test]
+    fn add_some() {
+        let d = parse("hours since 2000-01-01 11:30-07:00");
+
+        let _d = d.add_integer(10);
+        let _d = d.add_integers(&[10, 20, 40]);
+
+        let _d = d.add_float(10.0);
+        let _d = d.add_floats(&[10.0, 20.0]);
+    }
+
+    #[test]
+    fn add_some_using_trait() {
+        let d = parse("hours since 2000-01-01 11:30-07:00");
+        use crate::traits::Addable;
+
+        let _d = d.add(10);
+        let _d = d.add(&[10, 20, 40][..]);
+
+        let _d = d.add(10.0);
+        let _d = d.add(&[10.0, 20.0][..]);
     }
 }

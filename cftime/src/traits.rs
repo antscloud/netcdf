@@ -4,6 +4,55 @@ use std::{
     ops::{Add, Sub},
 };
 
+use crate::parser::ParsedCFTime;
+
+
+impl ParsedCFTime {
+    pub fn add_integer(&self, delta: i64) -> Self {
+        todo!()
+    }
+    pub fn add_integers(&self, delta: &[i64]) -> Vec<Self> {
+        delta.iter().copied().map(|delta| self.add_integer(delta)).collect()
+    }
+    pub fn add_float(&self, delta: f64) -> Self {
+        todo!()
+    }
+    pub fn add_floats(&self, delta: &[f64]) -> Vec<Self> {
+        delta.iter().copied().map(|delta| self.add_float(delta)).collect()
+    }
+}
+
+pub trait Addable<T> {
+    type Output;
+    fn add(&self, t: T) -> Self::Output;
+}
+
+impl Addable<i64> for ParsedCFTime {
+    type Output = Self;
+    fn add(&self, delta: i64) -> Self::Output {
+        self.add_integer(delta)
+    }
+}
+impl<'a> Addable<&'a [i64]> for ParsedCFTime {
+    type Output = Vec<Self>;
+    fn add(&self, delta: &'a [i64]) -> Self::Output {
+        self.add_integers(delta)
+    }
+}
+
+impl Addable<f64> for ParsedCFTime {
+    type Output = Self;
+    fn add(&self, delta: f64) -> Self::Output {
+        self.add_float(delta)
+    }
+}
+impl<'a> Addable<&'a [f64]> for ParsedCFTime {
+    type Output = Vec<Self>;
+    fn add(&self, delta: &'a [f64]) -> Self::Output {
+        self.add_floats(delta)
+    }
+}
+
 /*
 use crate::{
     calendars::Calendars,
