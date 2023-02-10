@@ -8,48 +8,48 @@ use crate::parser::ParsedCFTime;
 
 
 impl ParsedCFTime {
-    pub fn add_integer(&self, delta: i64) -> Self {
+    pub(crate) fn add_scaled_duration_integer(&self, delta: i64) -> Self {
         todo!()
     }
-    pub fn add_integers(&self, delta: &[i64]) -> Vec<Self> {
-        delta.iter().copied().map(|delta| self.add_integer(delta)).collect()
+    pub(crate) fn add_scaled_duration_integers(&self, delta: &[i64]) -> Vec<Self> {
+        delta.iter().copied().map(|delta| self.add_scaled_duration_integer(delta)).collect()
     }
-    pub fn add_float(&self, delta: f64) -> Self {
+    pub(crate) fn add_scaled_duration_float(&self, delta: f64) -> Self {
         todo!()
     }
-    pub fn add_floats(&self, delta: &[f64]) -> Vec<Self> {
-        delta.iter().copied().map(|delta| self.add_float(delta)).collect()
+    pub(crate) fn add_scaled_duration_floats(&self, delta: &[f64]) -> Vec<Self> {
+        delta.iter().copied().map(|delta| self.add_scaled_duration_float(delta)).collect()
     }
 }
 
-pub trait Addable<T> {
+pub trait AddableDuration<T> {
     type Output;
-    fn add(&self, t: T) -> Self::Output;
+    fn add_scaled_duration(&self, t: T) -> Self::Output;
 }
 
-impl Addable<i64> for ParsedCFTime {
+impl AddableDuration<i64> for ParsedCFTime {
     type Output = Self;
-    fn add(&self, delta: i64) -> Self::Output {
-        self.add_integer(delta)
+    fn add_scaled_duration(&self, delta: i64) -> Self::Output {
+        self.add_scaled_duration_integer(delta)
     }
 }
-impl<'a> Addable<&'a [i64]> for ParsedCFTime {
+impl<'a> AddableDuration<&'a [i64]> for ParsedCFTime {
     type Output = Vec<Self>;
-    fn add(&self, delta: &'a [i64]) -> Self::Output {
-        self.add_integers(delta)
+    fn add_scaled_duration(&self, delta: &'a [i64]) -> Self::Output {
+        self.add_scaled_duration_integers(delta)
     }
 }
 
-impl Addable<f64> for ParsedCFTime {
+impl AddableDuration<f64> for ParsedCFTime {
     type Output = Self;
-    fn add(&self, delta: f64) -> Self::Output {
-        self.add_float(delta)
+    fn add_scaled_duration(&self, delta: f64) -> Self::Output {
+        self.add_scaled_duration_float(delta)
     }
 }
-impl<'a> Addable<&'a [f64]> for ParsedCFTime {
+impl<'a> AddableDuration<&'a [f64]> for ParsedCFTime {
     type Output = Vec<Self>;
-    fn add(&self, delta: &'a [f64]) -> Self::Output {
-        self.add_floats(delta)
+    fn add_scaled_duration(&self, delta: &'a [f64]) -> Self::Output {
+        self.add_scaled_duration_floats(delta)
     }
 }
 

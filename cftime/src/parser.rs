@@ -313,22 +313,22 @@ mod test {
     fn add_some() {
         let d = parse("hours since 2000-01-01 11:30-07:00");
 
-        let _d = d.add_integer(10);
-        let _d = d.add_integers(&[10, 20, 40]);
+        let _d = d.add_scaled_duration_integer(10);
+        let _d = d.add_scaled_duration_integers(&[10, 20, 40]);
 
-        let _d = d.add_float(10.0);
-        let _d = d.add_floats(&[10.0, 20.0]);
+        let _d = d.add_scaled_duration_float(10.0);
+        let _d = d.add_scaled_duration_floats(&[10.0, 20.0]);
     }
 
     #[test]
     fn add_some_using_trait() {
         let d = parse("hours since 2000-01-01 11:30-07:00");
-        use crate::traits::Addable;
+        use crate::traits::AddableDuration;
 
-        let _d = d.add(10);
-        let _d = d.add(&[10, 20, 40][..]);
+        let _d = d.add_scaled_duration(10);
+        let _d = d.add_scaled_duration(&[10, 20, 40][..]);
 
-        let _d = d.add(10.0);
-        let _d = d.add(&[10.0, 20.0][..]);
+        let _d = d.add_scaled_duration(10.0);
+        let _d = d.add_scaled_duration(&[10.0, 20.0][..]);
     }
 }
