@@ -1,12 +1,11 @@
 #![allow(unused)]
 use crate::calendars::Calendar;
 //use crate::datetimes::factory::{CFDateFactory, CFDateTimeFactory, CFDates, CFDatetimes};
+use crate::date::Date;
 use crate::datetimes::Datetime;
-use crate::datetimes::Timezone;
 use crate::durations::{CFDuration, DurationUnit};
-// use crate::time::Time;
-use crate::datetimes::Time;
-use crate::tz::Tz;
+use crate::time::Time;
+use crate::tz::Timezone;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -121,10 +120,10 @@ fn duration<'a>(input: &'a str) -> IResult<&'a str, DurationUnit> {
     ))(input)
 }
 
-fn date<'a>(input: &'a str, calendar: Option<Calendar>) -> IResult<&'a str, crate::datetimes::Date> {
+fn date<'a>(input: &'a str, calendar: Option<Calendar>) -> IResult<&'a str, Date> {
     map(
         tuple((i32, tag("-"), u32, tag("-"), u32)),
-        |(year, _, month, _, day)| crate::datetimes::Date { year, month, day },
+        |(year, _, month, _, day)| Date { year, month, day },
     )(input)
 }
 fn time(input: &str) -> IResult<&str, Time> {
@@ -152,11 +151,11 @@ fn time(input: &str) -> IResult<&str, Time> {
     alt((hms, hm))(input)
 }
 
-fn timezone(input: &str) -> IResult<&str, crate::datetimes::Timezone> {
+fn timezone(input: &str) -> IResult<&str, Timezone> {
     println!("{input}");
     let hm = map(
         preceded(opt(tag("+")), separated_pair(i8, tag(":"), u8)),
-        |(hour, minute)| crate::datetimes::Timezone { hour, minute },
+        |(hour, minute)| Timezone { hour, minute },
     );
     let z = value(Timezone::utc(), tag("Z"));
     let utc = value(Timezone::utc(), tag("UTC"));
@@ -236,13 +235,9 @@ pub struct ParsedCFTime {
 /// Parse a CF compatible string into two components
 pub fn cf_parser(input: &str, calendar: Option<Calendar>) -> Result<ParsedCFTime, ParseError> {
     let since = tuple((space1, tag("since"), space1));
-    let x = all_consuming(separated_pair(
-        duration,
-        since,
-        |x| datetime(x, calendar),
-    ))(input)
-    .map(|(_, (duration, from))| ParsedCFTime { duration, from })
-    .map_err(|e| ParseError(format!("{}", e)));
+    let x = all_consuming(separated_pair(duration, since, |x| datetime(x, calendar)))(input)
+        .map(|(_, (duration, from))| ParsedCFTime { duration, from })
+        .map_err(|e| ParseError(format!("{}", e)));
     x
 }
 

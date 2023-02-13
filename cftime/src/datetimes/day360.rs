@@ -19,6 +19,17 @@ pub struct Date360Day {
     pub day: u32,
 }
 
+impl TryInto<Date360day> for Datetime {
+    fn into() {
+    }
+}
+
+impl Into<Datetime> for Date360day {
+    fn into() {
+
+    }
+}
+
 impl Date360Day {
     const DAYS_PER_MONTH_360: [u32; 12] = constants::DAYS_PER_MONTH_360;
     const CUM_DAYS_PER_MONTH_360: [u32; 13] = constants::CUM_DAYS_PER_MONTH_360;
