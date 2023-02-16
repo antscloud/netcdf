@@ -2,12 +2,13 @@
 use crate::constants;
 use num_integer::div_mod_floor;
 use std::fmt;
-#[derive(Debug, Clone, Copy)]
+
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Time {
     pub hour: u32,
     pub minute: u32,
-    pub second: u32,
-    pub nanosecond: u64,
+    pub second: Option<u32>,
+    pub nanosecond: Option<u64>,
 }
 
 impl fmt::Display for Time {
@@ -15,35 +16,31 @@ impl fmt::Display for Time {
         write!(
             f,
             "{:02}:{:02}:{:02}.{:06}",
-            self.hour, self.minute, self.second, self.nanosecond
+            self.hour,
+            self.minute,
+            self.second.unwrap_or(0),
+            self.nanosecond.unwrap_or(0)
         )
     }
 }
 
-impl Default for Time {
-    fn default() -> Self {
-        Self {
-            hour: 0,
-            minute: 0,
-            second: 0,
-            nanosecond: 0,
-        }
-    }
-}
-
 impl Time {
-    pub fn new(hour: u32, minute: u32, second: u32, nanosecond: u64) -> Self {
+    pub fn new(hour: u32, minute: u32, second: Option<u32>, nanosecond: Option<u64>) -> Self {
         if hour >= 24 {
             panic!("Hours should be between 0 and 23. Found {hour}")
         }
         if minute >= 60 {
             panic!("Minutes should be between 0 and 59. Found {minute}")
         }
-        if second >= 60 {
-            panic!("Seconds should be between 0 and 59. Found {second}")
+        if let Some(second) = second {
+            if second >= 60 {
+                panic!("Seconds should be between 0 and 59. Found {second}")
+            }
         }
-        if nanosecond >= 1_000_000_000 {
-            panic!("Nano-seconds should be between 0 and 1 000 000 000. Found {nanosecond}")
+        if let Some(nanosecond) = nanosecond {
+            if nanosecond >= 1_000_000_000 {
+                panic!("Nano-seconds should be between 0 and 1 000 000 000. Found {nanosecond}")
+            }
         }
         Self {
             hour,
@@ -58,10 +55,10 @@ impl Time {
     pub fn minute(&self) -> u32 {
         self.minute
     }
-    pub fn second(&self) -> u32 {
+    pub fn second(&self) -> Option<u32> {
         self.second
     }
-    pub fn nanosecond(&self) -> u64 {
+    pub fn nanosecond(&self) -> Option<u64> {
         self.nanosecond
     }
     pub fn num_hours(&self) -> u32 {
@@ -71,7 +68,7 @@ impl Time {
         self.hour * 24 + self.minute
     }
     pub fn num_seconds(&self) -> u32 {
-        self.num_minutes() * 60 + self.second
+        self.num_minutes() * 60 + self.second.unwrap_or(0)
     }
     pub fn num_nanoseconds(&self) -> u32 {
         (self.num_seconds() as f64 * 1e6) as u32
@@ -82,6 +79,6 @@ impl Time {
         let seconds = (seconds % _mod_sec + _mod_sec) % _mod_sec;
         let (mins, sec) = div_mod_floor(seconds, 60);
         let (hour, min) = div_mod_floor(mins, 60);
-        Self::new(hour as u32, min as u32, sec as u32, 0)
+        Self::new(hour as u32, min as u32, Some(sec as u32), None)
     }
 }

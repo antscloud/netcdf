@@ -4,6 +4,17 @@ use std::{
     ops::{Add, Sub},
 };
 
+use crate::calendars::Calendar;
+use crate::datetimes::Datetime;
+use crate::parser::ParsedCFTime;
+use crate::durations::Duration;
+
+pub trait DurationAddable {
+    fn add_duration(&self, duration: Duration) -> Self;
+}
+
+
+/*
 use crate::{
     calendars::Calendars,
     datetimes::{
@@ -49,3 +60,4 @@ pub trait DateTimeLike: Debug {
     fn num_seconds_from_ce(&self) -> i32;
     fn num_nanoseconds_from_ce(&self) -> i64;
 }
+*/

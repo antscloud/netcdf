@@ -1,60 +1,86 @@
 #![allow(unused)]
-use crate::calendars::Calendars;
+use crate::calendars::Calendar;
 use crate::constants;
-use crate::durations::CFDuration;
-use crate::macros::{impl_date_display, impl_dt_display, impl_getter};
+use crate::durations::Duration;
+//use crate::macros::{impl_date_display, impl_dt_display, impl_getter};
 use crate::time::Time;
-use crate::traits::{DateLike, DateTimeLike};
-use crate::tz::Tz;
+use crate::datetimes::Datetime;
+use crate::date::Date;
+use crate::traits::DurationAddable;
+//use crate::traits::{/*DateLike,*/ DateTimeLike};
+use crate::tz::Timezone;
 use num_integer::div_mod_floor;
 use std::{
     fmt,
     ops::{Add, Sub},
 };
 
-#[derive(Debug, Copy, Clone)]
-pub struct Date360Day {
-    pub year: i32,
-    pub month: u32,
-    pub day: u32,
+#[derive(Debug, Copy, Clone, Default)]
+pub struct Datetime360Day {
+    pub date: Date,
+    pub time: Option<Time>,
+    pub tz: Option<Timezone>,
 }
 
-impl Date360Day {
-    const DAYS_PER_MONTH_360: [u32; 12] = constants::DAYS_PER_MONTH_360;
-    const CUM_DAYS_PER_MONTH_360: [u32; 13] = constants::CUM_DAYS_PER_MONTH_360;
-    const CALENDAR: Calendars = Calendars::Day360;
+impl TryInto<Datetime360Day> for Datetime {
+    type Error = ();
+    fn try_into(self) -> Result<Datetime360Day, Self::Error> {
+        if self.calendar != Some(Calendar::Day360) {
+            return Err(());
+        }
+
+        if (self.date.month > 12) | (self.date.month < 1) {
+            // panic!("Month should be between 1 and 12. Found {month}")
+            return Err(());
+        }
+
+        let max_day = Datetime360Day::DAYS_PER_MONTH[(self.date.month - 1) as usize];
+        if self.date.day > max_day {
+            return Err(());
+            //panic!(
+            //    "Day can not exceed {max_day} for {} of the year {} and {}",
+            //    constants::MONTHS[(self.date.month - 1) as usize],
+            //    self.date.year,
+            //    Datetime360Day::CALENDAR
+            //)
+        }
+
+        Ok(Datetime360Day {
+            date: self.date,
+            time: self.time,
+            tz: self.tz,
+        })
+    }
 }
 
-impl Date360Day {
-    pub fn new(year: i32, month: u32, day: u32) -> Date360Day {
-        if (month > 12) | (month < 1) {
-            panic!("Month should be between 1 and 12. Found {month}")
-        }
-        let max_day = Date360Day::DAYS_PER_MONTH_360[(month - 1) as usize];
-        if day > max_day {
-            panic!(
-                "Day can not exceed {max_day} for {} of the year {year} and {}",
-                constants::MONTHS[(month - 1) as usize],
-                Date360Day::CALENDAR
-            )
-        }
-        Self {
-            year: year,
-            month: month,
-            day: day,
+
+impl Into<Datetime> for Datetime360Day {
+    fn into(self) -> Datetime {
+        Datetime {
+            date: self.date,
+            time: self.time,
+            tz: self.tz,
+            calendar: Some(Calendar::Day360),
         }
     }
 }
 
-impl Default for Date360Day {
-    fn default() -> Self {
-        Self {
-            year: constants::UNIX_DEFAULT_YEAR,
-            month: constants::UNIX_DEFAULT_MONTH,
-            day: constants::UNIX_DEFAULT_DAY,
-        }
+
+impl Datetime360Day {
+    const DAYS_PER_MONTH: [u32; 12] = constants::DAYS_PER_MONTH_360;
+    const CUM_DAYS_PER_MONTH_: [u32; 13] = constants::CUM_DAYS_PER_MONTH_360;
+    const CALENDAR: Calendar = Calendar::Day360;
+}
+
+impl DurationAddable for Datetime360Day {
+    fn add_duration(&self, duration: Duration) -> Self {
+        todo!()
     }
 }
+
+
+/*
+
 
 impl DateLike for Date360Day {
     fn num_days_from_ce(&self) -> i32 {
@@ -84,12 +110,6 @@ impl DateLike for Date360Day {
     }
 }
 
-#[derive(Debug, Copy, Clone, Default)]
-pub struct DateTime360Day {
-    pub date: Date360Day,
-    pub time: Time,
-    pub tz: Tz,
-}
 
 impl DateTime360Day {
     pub fn new(date: Date360Day, time: Time, tz: Tz) -> DateTime360Day {
@@ -287,3 +307,4 @@ mod test {
         assert_eq!(dt.time.second, 57);
     }
 }
+*/

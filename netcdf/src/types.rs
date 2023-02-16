@@ -6,7 +6,7 @@ use netcdf_sys::*;
 use std::convert::TryInto;
 
 /// Basic numeric types
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum BasicType {
     /// Signed 1 byte integer
     Byte,
@@ -223,7 +223,7 @@ impl VlenType {
             NC_UINT64 => BasicType::Uint64,
             NC_FLOAT => BasicType::Float,
             NC_DOUBLE => BasicType::Double,
-            _ => panic!("Did not expect typeid {} in this context", bastyp),
+            _ => panic!("Did not expect typeid {bastyp} in this context"),
         }
     }
 }
@@ -282,7 +282,7 @@ impl EnumType {
             NC_UINT64 => BasicType::Uint64,
             NC_FLOAT => BasicType::Float,
             NC_DOUBLE => BasicType::Double,
-            _ => panic!("Did not expect typeid {} in this context", typ),
+            _ => panic!("Did not expect typeid {typ} in this context"),
         }
     }
 
@@ -759,7 +759,7 @@ impl VariableType {
                     NC_OPAQUE => Ok(OpaqueType { ncid, id: xtype }.into()),
                     NC_ENUM => Ok(EnumType { ncid, id: xtype }.into()),
                     NC_COMPOUND => Ok(CompoundType { ncid, id: xtype }.into()),
-                    _ => panic!("Unexpected base type: {}", base_xtype),
+                    _ => panic!("Unexpected base type: {base_xtype}"),
                 }
             }
         }
