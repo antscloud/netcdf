@@ -1,11 +1,12 @@
 #![allow(unused)]
 use crate::calendars::Calendar;
 use crate::constants;
-use crate::durations::CFDuration;
-use crate::macros::{impl_date_display, impl_dt_display, impl_getter};
+use crate::durations::Duration;
+//use crate::macros::{impl_date_display, impl_dt_display, impl_getter};
 use crate::time::Time;
 use crate::datetimes::Datetime;
 use crate::date::Date;
+use crate::traits::DurationAddable;
 //use crate::traits::{/*DateLike,*/ DateTimeLike};
 use crate::tz::Timezone;
 use num_integer::div_mod_floor;
@@ -70,6 +71,13 @@ impl Datetime360Day {
     const CUM_DAYS_PER_MONTH_: [u32; 13] = constants::CUM_DAYS_PER_MONTH_360;
     const CALENDAR: Calendar = Calendar::Day360;
 }
+
+impl DurationAddable for Datetime360Day {
+    fn add_duration(&self, duration: Duration) -> Self {
+        todo!()
+    }
+}
+
 
 /*
 

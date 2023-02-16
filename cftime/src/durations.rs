@@ -6,6 +6,7 @@ use std::{
     fmt,
     ops::{Add, Div, Mul, Neg, Sub},
 };
+use either::Either;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum DurationUnit {
@@ -17,6 +18,34 @@ pub enum DurationUnit {
     Seconds,
     Milliseconds,
     Microseconds,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Duration {
+    pub value: Either<i64, f64>,
+    pub unit: DurationUnit,
+}
+
+impl Mul<DurationUnit> for i64 {
+    type Output = Duration;
+
+    fn mul(self, rhs: DurationUnit) -> Self::Output {
+        Duration {
+            value: Either::Left(self),
+            unit: rhs,
+        }
+    }
+}
+
+impl Mul<DurationUnit> for f64 {
+    type Output = Duration;
+
+    fn mul(self, rhs: DurationUnit) -> Self::Output {
+        Duration {
+            value: Either::Right(self),
+            unit: rhs,
+        }
+    }
 }
 
 /// Base duration between time points. Higly inspired by https://docs.rs/time/0.1.37/src/time/duration.rs.html

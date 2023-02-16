@@ -7,37 +7,12 @@ use std::{
 use crate::calendars::Calendar;
 use crate::datetimes::Datetime;
 use crate::parser::ParsedCFTime;
+use crate::durations::Duration;
 
-pub trait AddableDuration<T> {
-    type Output;
-    fn add_scaled_duration(&self, t: T) -> Self::Output;
-}
-
-impl AddableDuration<i64> for ParsedCFTime {
-    type Output = Datetime;
-    fn add_scaled_duration(&self, delta: i64) -> Self::Output {
-        self.add_scaled_duration_integer(delta)
-    }
-}
-impl<'a> AddableDuration<&'a [i64]> for ParsedCFTime {
-    type Output = Vec<Datetime>;
-    fn add_scaled_duration(&self, delta: &'a [i64]) -> Self::Output {
-        self.add_scaled_duration_integers(delta)
-    }
+pub trait DurationAddable {
+    fn add_duration(&self, duration: Duration) -> Self;
 }
 
-impl AddableDuration<f64> for ParsedCFTime {
-    type Output = Datetime;
-    fn add_scaled_duration(&self, delta: f64) -> Self::Output {
-        self.add_scaled_duration_float(delta)
-    }
-}
-impl<'a> AddableDuration<&'a [f64]> for ParsedCFTime {
-    type Output = Vec<Datetime>;
-    fn add_scaled_duration(&self, delta: &'a [f64]) -> Self::Output {
-        self.add_scaled_duration_floats(delta)
-    }
-}
 
 /*
 use crate::{
